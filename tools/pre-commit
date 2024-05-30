@@ -1,5 +1,5 @@
-<!--
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/bin/bash
+# Copyright (c) 2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -24,28 +24,33 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
--->
 
-[![License](https://img.shields.io/badge/License-BSD3-lightgrey.svg)](https://opensource.org/licenses/BSD-3-Clause)
+###############################################################################
+#
+# Git pre-commit hook for Triton related projects
+#
+# To install this hook for a project, copy "pre-commit" and "format.py" into
+# ".git/hooks/" directory of the project
+#
+###############################################################################
 
-# Triton Inference Server Common
+###############################################################################
+#
+# Run formatter script
+#
+###############################################################################
 
-Common source, scripts and utilities shared across all Triton
-repositories.
+# Repo root
+GIT_REPO_ROOT=$(git rev-parse --show-toplevel)
 
-This repo is not typically built directly but is instead included in
-the build of other repos. To build directly first install the required
-dependencies.
+PYTHON_CMD=python3
+FORMATTER_PY=${GIT_REPO_ROOT}/.git/hooks/format.py
 
-```
-$ apt-get install rapidjson-dev
-```
+CHANGED_FILES="$(git --no-pager diff --name-status --no-color --cached | awk '{ if (match($1, /R[0-9]+/)) { print $3 } else if ($1 != "D") { print $2 } }')"
 
-Use cmake 3.17 or later to build and install in a local directory.
-
-```
-$ mkdir build
-$ cd build
-$ cmake -DCMAKE_INSTALL_PREFIX:PATH=`pwd`/install ..
-$ make install
-```
+echo "Running Python auto-format..."
+for CHANGED_FILE in $CHANGED_FILES;
+do
+    ${PYTHON_CMD} ${FORMATTER_PY} ${GIT_REPO_ROOT}/${CHANGED_FILE}
+    git add ${GIT_REPO_ROOT}/${CHANGED_FILE}
+done
